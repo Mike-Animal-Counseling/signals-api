@@ -1,8 +1,9 @@
 # Real‑Time Signal Processing API (Coherence Protocol)
 
-**Live Demo:** `https://signals-api-frontend-028322.netlify.app` (frontend) → talks to `https://signals-api-z3n8.onrender.com` (backend)  
+**Live Demo:** `https://signals-api-frontend-028322.netlify.app` (frontend) → `https://signals-api-z3n8.onrender.com` (backend)  
 **Repo:** `https://github.com/Mike-Animal-Counseling/signals-api`
 
+## Overview
 This project implements a real‑time signal pipeline with JWT auth, REST APIs, Socket.IO streaming, Docker/Compose, and a minimal React dashboard.
 
 ## Tech Stack
@@ -11,9 +12,7 @@ This project implements a real‑time signal pipeline with JWT auth, REST APIs, 
 - **Frontend:** React (Vite), Axios, Socket.IO client, Day.js
 - **Infra:** Docker & docker‑compose, Render (Backend), Netlify (Frontend)
 
----
-
-## Quick Start (Local)
+## Quick Set Up (Local Version)
 
 ### 1) Backend
 
