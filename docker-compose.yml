@@ -1,0 +1,40 @@
+# docker-compose.yml (dev hot-reload)
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo-data:/data/db
+
+  api:
+    build:
+      context: ./backend
+    # Mount your local backend folder into the container
+    volumes:
+      - ./backend:/usr/src/app
+      # Keep container's node_modules (prevents host from shadowing it)
+      - /usr/src/app/node_modules
+    env_file:
+      - ./backend/.env
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/signalsdb
+      - PORT=4000
+      - CORS_ORIGIN=http://localhost:5173
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo
+    # Ensure we run nodemon in the container for auto-restart
+    command: npm run dev
+
+  web:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  mongo-data:
