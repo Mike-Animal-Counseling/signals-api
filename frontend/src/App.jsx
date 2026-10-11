@@ -9,9 +9,9 @@ const API = `${API_BASE}/api`;
 const api = axios.create({ baseURL: API_BASE });
 
 export default function App() {
-  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [token, setToken] = useState(sessionStorage.getItem("token") || "");
   const [authView, setAuthView] = useState("choice");
-  const [email, setEmail] = useState(localStorage.getItem("email") || "");
+  const [email, setEmail] = useState(sessionStorage.getItem("email") || "");
   const [password, setPassword] = useState("");
 
   const [signals, setSignals] = useState([]);
@@ -20,6 +20,20 @@ export default function App() {
   const [to, setTo] = useState("");
   const [error, setError] = useState("");
   const socketRef = useRef(null);
+
+  useEffect(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("email");
+    const interceptor = api.interceptors.response.use(value => value, error => {
+      if (error.response?.status === 401) {
+        sessionStorage.removeItem("token");
+        delete api.defaults.headers.common.Authorization;
+        setToken(""); setSignals([]);
+      }
+      return Promise.reject(error);
+    });
+    return () => api.interceptors.response.eject(interceptor);
+  }, []);
 
   useEffect(() => {
     if (!token) return;
@@ -40,6 +54,11 @@ export default function App() {
     });
 
     socketRef.current = socket;
+    socket.on("disconnect", reason => {
+      if (reason === "io server disconnect") {
+        sessionStorage.removeItem("token"); setToken(""); setSignals([]);
+      }
+    });
     return () => socket.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -79,9 +98,9 @@ export default function App() {
     setError("");
     try {
       const { data } = await api.post(`${API}/auth/login`, { email, password });
-      localStorage.setItem("token", data.token);
+      sessionStorage.setItem("token", data.token);
       setToken(data.token);
-      localStorage.setItem("email", email);
+      sessionStorage.setItem("email", email);
       setEmail(email);
     } catch (e) {
       setError(e.response?.data?.error || e.message);
@@ -89,7 +108,9 @@ export default function App() {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    sessionStorage.removeItem("token");
+    delete api.defaults.headers.common.Authorization;
+    socketRef.current?.disconnect();
     setToken("");
     setSignals([]);
     setError("");
@@ -282,7 +303,7 @@ export default function App() {
             />
             <input
               style={input}
-              placeholder="Password (at least 8 chars)"
+              placeholder="Password (at least 12 characters)"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

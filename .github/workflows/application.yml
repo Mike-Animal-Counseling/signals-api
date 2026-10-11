@@ -1,0 +1,45 @@
+name: Application security and build
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: application-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - name: Install backend locked dependencies
+        working-directory: backend
+        run: npm ci --ignore-scripts
+      - name: Audit backend dependencies
+        working-directory: backend
+        run: npm audit --audit-level=low
+      - name: Authentication and security regressions
+        working-directory: backend
+        run: npm test
+      - name: Install frontend locked dependencies
+        working-directory: frontend
+        run: npm ci --ignore-scripts
+      - name: Audit frontend dependencies
+        working-directory: frontend
+        run: npm audit --audit-level=low
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+      - name: Build production assets
+        working-directory: frontend
+        env:
+          VITE_API_URL: https://api.example.invalid
+        run: npm run build

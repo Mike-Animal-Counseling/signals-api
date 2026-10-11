@@ -1,0 +1,9 @@
+# Production security requirements
+
+Run Node 24 or later with `NODE_ENV=production`. Set an independently generated `JWT_SECRET` of at least 32 random bytes, authenticated `MONGO_URI`, explicit HTTPS `CORS_ORIGINS`, and authenticated TLS `REDIS_URL`. Configure `TRUST_PROXY` to match only your actual reverse proxy; do not enable blanket proxy trust. Terminate TLS at that proxy, cap request sizes there, and expose only HTTPS. Redis stores atomic authentication and request budgets; an outage rejects protected requests.
+
+The historical MongoDB credentials and JWT signing secret must be revoked/replaced at MongoDB Atlas and in the deployment before this service is production-ready. Restart all instances after rotation and verify old credentials and tokens no longer work through the providers' administration tools. Never put replacement values in Git. Historical files remain public until any separately planned history cleanup; history cleanup cannot replace rotation.
+
+JWTs last 15 minutes, include issuer/audience/identity/JTI, and are checked against the current account. The SPA uses sessionStorage and clears legacy localStorage credentials. Configure frontend `VITE_API_URL` to the HTTPS API URL and deliver a restrictive CSP at the frontend host. Socket clients require an allowed Origin, an authenticated account, and a valid token; events are delivered only to their owner's room. Tokens from the old implementation are rejected. Existing passwords under the new registration policy can still sign in; new passwords require 12 characters and no more than 72 UTF-8 bytes.
+
+Use `npm ci --ignore-scripts` in backend and frontend, run backend `npm test`, and frontend `npm run lint && npm run build`. Database migrations, backup restoration, TLS termination and production smoke tests remain deployment responsibilities.
