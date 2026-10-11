@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
+import { rateLimit as expressRateLimit } from 'express-rate-limit';
 import { issueToken, verifyToken, securityHeaders, rateLimit } from './security.js';
 const invalid = (res, message = 'Invalid request') => res.status(400).json({ error: message });
 const normalizeEmail = value => typeof value === 'string' && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? value.trim().toLowerCase() : null;
@@ -16,6 +17,8 @@ export function createApp({ User, Signal, budgets, config, io }) {
     if (origin && !config.origins.includes(origin)) return res.status(403).json({ error: 'Origin not allowed' }); next();
   });
   app.use(cors({ origin: config.origins, methods: ['GET', 'POST', 'DELETE'], allowedHeaders: ['Authorization', 'Content-Type'] }));
+  // Per-process overload protection complements the cross-instance Redis budgets.
+  app.use(expressRateLimit({ windowMs: 60000, limit: 120, standardHeaders: 'draft-8', legacyHeaders: false }));
   app.use(rateLimit(budgets, 'ip', 120)); app.use(express.json({ limit: '16kb', strict: true }));
   const auth = async (req, res, next) => {
     try {
@@ -53,7 +56,7 @@ export function createApp({ User, Signal, budgets, config, io }) {
     const { type, from, to, limit = '50' } = req.query;
     if ((type !== undefined && (typeof type !== 'string' || type.length > 80)) || (from !== undefined && (typeof from !== 'string' || !Number.isFinite(Date.parse(from)))) || (to !== undefined && (typeof to !== 'string' || !Number.isFinite(Date.parse(to)))) || typeof limit !== 'string' || !/^\d{1,3}$/.test(limit) || +limit < 1 || +limit > 500) return invalid(res);
     const query = { user_id: req.user.email };
-    if (type) query.signal_type = type;
+    if (type) query.signal_type = String(type);
     if (from || to) { query.timestamp = {}; if (from) query.timestamp.$gte = new Date(from); if (to) query.timestamp.$lte = new Date(to); }
     res.json(await Signal.find(query).sort({ timestamp: -1 }).limit(+limit));
   });
