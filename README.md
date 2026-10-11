@@ -170,3 +170,7 @@ socket.on("signal:delete", (msg) => console.log("DELETE", msg));
 2. Set a build env var:
    - `VITE_API_URL=https://sample-api.onrender.com` from render
 3. Redeploy. Validate login/register and that signals stream in real‑time.
+
+## Security and deployment
+
+Read the [security policy](SECURITY.md) and [production requirements](docs/PRODUCTION_SECURITY.md) before deployment.
