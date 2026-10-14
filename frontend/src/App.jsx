@@ -35,6 +35,25 @@ export default function App() {
     return () => api.interceptors.response.eject(interceptor);
   }, []);
 
+  // Ensure we never keep duplicates with the same _id
+  const upsertSignal = (sig) =>
+    setSignals((prev) =>
+      prev.some((s) => s._id === sig._id) ? prev : [sig, ...prev]
+    );
+
+  const fetchSignals = async () => {
+    try {
+      const params = {};
+      if (type) params.type = type;
+      if (from) params.from = new Date(from).toISOString();
+      if (to) params.to = new Date(to).toISOString();
+      const { data } = await api.get(`${API}/signals`, { params });
+      setSignals(data);
+    } catch (e) {
+      setError(e.response?.data?.error || e.message);
+    }
+  };
+
   useEffect(() => {
     if (!token) return;
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -62,25 +81,6 @@ export default function App() {
     return () => socket.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
-
-  // Ensure we never keep duplicates with the same _id
-  const upsertSignal = (sig) =>
-    setSignals((prev) =>
-      prev.some((s) => s._id === sig._id) ? prev : [sig, ...prev]
-    );
-
-  const fetchSignals = async () => {
-    try {
-      const params = {};
-      if (type) params.type = type;
-      if (from) params.from = new Date(from).toISOString();
-      if (to) params.to = new Date(to).toISOString();
-      const { data } = await api.get(`${API}/signals`, { params });
-      setSignals(data);
-    } catch (e) {
-      setError(e.response?.data?.error || e.message);
-    }
-  };
 
   const onRegister = async (e) => {
     e.preventDefault();
