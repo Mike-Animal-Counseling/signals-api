@@ -57,7 +57,20 @@ export default function App() {
   useEffect(() => {
     if (!token) return;
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    fetchSignals();
+    const controller = new AbortController();
+    const params = {};
+    if (type) params.type = type;
+    if (from) params.from = new Date(from).toISOString();
+    if (to) params.to = new Date(to).toISOString();
+    api.get(`${API}/signals`, { params, signal: controller.signal })
+      .then(({ data }) => {
+        if (!controller.signal.aborted) setSignals(data);
+      })
+      .catch(error => {
+        if (!controller.signal.aborted) {
+          setError(error.response?.data?.error || error.message);
+        }
+      });
 
     const socket = io(API_BASE, {
       auth: { token },
@@ -78,7 +91,10 @@ export default function App() {
         sessionStorage.removeItem("token"); setToken(""); setSignals([]);
       }
     });
-    return () => socket.disconnect();
+    return () => {
+      controller.abort();
+      socket.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
