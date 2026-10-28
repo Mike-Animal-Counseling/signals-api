@@ -72,7 +72,7 @@ docker compose up --build
 
 **Key flows**
 
-- Users register/login → JWT issued (expires in 7 days).
+- Users register, then log in → JWT issued (expires in 15 minutes).
 - Authenticated clients call REST to create/get/delete signals.
 - On create/delete, server broadcasts to all clients through `signal:new` / `signal:delete` via Socket.IO.
 - Dashboard shows live updates and applies filters by type or time.
@@ -100,8 +100,8 @@ Base URL: `https://signals-api-z3n8.onrender.com` (local: `http://localhost:4000
 { "email": "march1@yahoo.com", "password": "example-passphrase-123" }
 ```
 
-- 200 → `{ "token": "<JWT>" }` (Authorization: `Bearer <JWT>` for all protected routes)
-- 400/401 → `{ error: "..." }`
+- 200 → `{ "token": "<JWT>", "expiresIn": 900 }` (Authorization: `Bearer <JWT>` for all protected routes)
+- 401 → `{ error: "..." }` for invalid login credentials
 
 **GET `/api/health`**
 
