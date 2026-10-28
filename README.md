@@ -70,8 +70,6 @@ docker compose up --build
 <img width="701" height="411" alt="Coherence Signals API Archi Diagram drawio" src="https://github.com/user-attachments/assets/956d8237-8f81-4e3f-ae90-7104709ef654" />
 
 
-````
-
 **Key flows**
 
 - Users register/login → JWT issued (expires in 7 days).
@@ -90,8 +88,8 @@ Base URL: `https://signals-api-z3n8.onrender.com` (local: `http://localhost:4000
 **POST `/api/auth/register`**
 
 ```json
-{ "email": "march1@yahoo.com", "password": "123123123" }
-````
+{ "email": "march1@yahoo.com", "password": "example-passphrase-123" }
+```
 
 - 201 → `{ id, email }`
 - 400/409 → `{ error: "..." }`
@@ -99,7 +97,7 @@ Base URL: `https://signals-api-z3n8.onrender.com` (local: `http://localhost:4000
 **POST `/api/auth/login`**
 
 ```json
-{ "email": "march1@yahoo.com", "password": "123123123" }
+{ "email": "march1@yahoo.com", "password": "example-passphrase-123" }
 ```
 
 - 200 → `{ "token": "<JWT>" }` (Authorization: `Bearer <JWT>` for all protected routes)
@@ -116,7 +114,7 @@ Base URL: `https://signals-api-z3n8.onrender.com` (local: `http://localhost:4000
 ```json
 {
   "signal_type": "demo",
-  "timestamp": "2025-08-013T12:00:00.000Z",
+  "timestamp": "2025-08-13T12:00:00.000Z",
   "payload": { "note": "This is a sample payload" }
 }
 ```
