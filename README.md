@@ -76,7 +76,7 @@ docker compose up --build
 
 - Users register, then log in → JWT issued (expires in 15 minutes).
 - Authenticated clients call REST to create/get/delete signals.
-- On create/delete, server broadcasts to all clients through `signal:new` / `signal:delete` via Socket.IO.
+- On create/delete, the server emits `signal:new` / `signal:delete` to the authenticated user's `user:<id>` Socket.IO room.
 - Dashboard shows live updates and applies filters by type or time.
 
 ---
@@ -122,7 +122,7 @@ Base URL: `https://signals-api-z3n8.onrender.com` (local: `http://localhost:4000
 ```
 
 - 201 → the created signal document
-- Broadcasts `signal:new`
+- Emits `signal:new` to the authenticated user's room
 
 **GET `/api/signals?type=demo&from=ISO&to=ISO&limit=50`**
 
@@ -135,11 +135,13 @@ Base URL: `https://signals-api-z3n8.onrender.com` (local: `http://localhost:4000
 **DELETE `/api/signals/:id`**
 
 - Only the account owner can delete the signals they created.
-- 200 → `{ ok: true }` and broadcasts `signal:delete`
+- 200 → `{ ok: true }` and emits `signal:delete` to the authenticated user's room
 
 ### WebSocket (Socket.IO)
 
 Client connects to the API URL with auth:
+
+The server validates the JWT during the Socket.IO handshake and joins the connection to that user's room. Other accounts do not receive its signal events. When the JWT expires, the server disconnects the socket; a new connection must use a valid token.
 
 ```js
 import { io } from "socket.io-client";
