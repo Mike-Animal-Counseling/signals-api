@@ -16,7 +16,9 @@ This project implements a real‑time signal pipeline with JWT auth, REST APIs, 
 
 ### 1) Backend
 
-Create `./.env` from the example below and fill in values:
+Use Node.js 24 or newer, as required by `backend/package.json`. Create `backend/.env` from `backend/.env.example` and fill in the values below. The backend loads this file when started from the `backend` directory.
+
+Set `JWT_SECRET` to a newly generated random value of at least 32 characters; the placeholder below is not a usable secret:
 
 ```env
 MONGO_URI=<your-mongodb-connection-string>
