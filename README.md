@@ -1,7 +1,8 @@
 # Real‑Time Signal Processing API (Coherence Protocol)
 
-**Live Demo:** `https://signals-api-frontend-028322.netlify.app` (frontend) → `https://signals-api-z3n8.onrender.com` (backend)  
-**Repo:** `https://github.com/Mike-Animal-Counseling/signals-api`
+[Open Dashboard](https://signals-api-frontend-028322.netlify.app) · [Run Locally](#run-locally) · [Architecture](#architecture) · [API Reference](#api-reference)
+
+The hosted dashboard connects to a separate Render API. If the backend is unavailable, use the local setup below to run the complete pipeline.
 
 ## Overview
 This project implements a real‑time signal pipeline with JWT auth, REST APIs, Socket.IO streaming, Docker/Compose, and a minimal React dashboard.
@@ -12,7 +13,14 @@ This project implements a real‑time signal pipeline with JWT auth, REST APIs, 
 - **Frontend:** React (Vite), Axios, Socket.IO client, Day.js
 - **Infra:** Docker & docker‑compose, Render (Backend), Netlify (Frontend)
 
-## Quick Set Up (Local Version)
+## Run Locally
+
+```bash
+git clone https://github.com/Mike-Animal-Counseling/signals-api.git
+cd signals-api
+```
+
+Start the backend and frontend in separate terminals from the repository root.
 
 ### 1) Backend
 
@@ -30,7 +38,7 @@ PORT=4000
 Install & run:
 
 ```bash
-cd signals-api && cd backend
+cd backend
 npm install
 npm run dev
 ```
@@ -52,15 +60,15 @@ VITE_API_URL=http://localhost:4000
 Then:
 
 ```bash
-cd signals-api && cd frontend
+cd frontend
 npm install
 npm run dev
 # open http://localhost:5173
 ```
 
-### 3) Docker (Containization)
+### 3) Docker
 
-A sample `docker-compose.yml` can run API + Mongo (+ optionally the frontend). From the repo root:
+The [`docker-compose.yml`](docker-compose.yml) starts MongoDB, the API, and the frontend. From the repo root:
 
 ```bash
 docker compose up --build
@@ -83,14 +91,14 @@ docker compose up --build
 
 ## API Reference
 
-Base URL: `https://signals-api-z3n8.onrender.com` (local: `http://localhost:4000`)
+Use `http://localhost:4000` for local development. The hosted backend address is `https://signals-api-z3n8.onrender.com`.
 
 ### Auth
 
 **POST `/api/auth/register`**
 
 ```json
-{ "email": "march1@yahoo.com", "password": "example-passphrase-123" }
+{ "email": "developer@example.com", "password": "example-passphrase-123" }
 ```
 
 - 201 → `{ id, email }`
@@ -99,7 +107,7 @@ Base URL: `https://signals-api-z3n8.onrender.com` (local: `http://localhost:4000
 **POST `/api/auth/login`**
 
 ```json
-{ "email": "march1@yahoo.com", "password": "example-passphrase-123" }
+{ "email": "developer@example.com", "password": "example-passphrase-123" }
 ```
 
 - 200 → `{ "token": "<JWT>", "expiresIn": 900 }` (Authorization: `Bearer <JWT>` for all protected routes)
@@ -159,7 +167,7 @@ socket.on("signal:delete", (msg) => console.log("DELETE", msg));
 
 1. Create a **Web Service** pointing to your API code.
 2. Set env vars:
-   - `MONGO_URI` – use Mongo conncection string you self-designed
+   - `MONGO_URI` – use your authenticated MongoDB connection string
    - `JWT_SECRET` – strong random string for security.
    - `CORS_ORIGIN` – include the Netlify domain
    - `PORT` – 4000
@@ -170,7 +178,7 @@ socket.on("signal:delete", (msg) => console.log("DELETE", msg));
 
 1. Point Netlify to the frontend project (Vite).
 2. Set a build env var:
-   - `VITE_API_URL=https://sample-api.onrender.com` from render
+   - `VITE_API_URL` – the HTTPS origin of your deployed Render API
 3. Redeploy. Validate login/register and that signals stream in real‑time.
 
 ## Security and deployment
