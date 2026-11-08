@@ -149,7 +149,11 @@ Use `http://localhost:4000` for local development. The hosted backend address is
 
 Client connects to the API URL with auth:
 
-The server validates the JWT during the Socket.IO handshake and joins the connection to that user's room. Other accounts do not receive its signal events. When the JWT expires, the server disconnects the socket; a new connection must use a valid token.
+The server validates the JWT during the Socket.IO handshake and joins the connection to that user's room. Other accounts do not receive its signal events.
+
+When the JWT `exp` is reached, the server calls `socket.disconnect(true)`. That is a server-initiated close, so the Socket.IO client reports `reason === "io server disconnect"` and does **not** auto-reconnect. Reusing the expired token on a new handshake is rejected as `unauthorized`.
+
+Recovery is a new login, then a new socket with the new token. The dashboard does this in `frontend/src/App.jsx`: on `io server disconnect` it clears `sessionStorage` and React token state, which returns the UI to the sign-in screen. After `POST /api/auth/login`, the token effect opens a fresh connection with `auth: { token }`.
 
 ```js
 import { io } from "socket.io-client";
@@ -159,6 +163,11 @@ const socket = io(API_BASE, {
 });
 socket.on("signal:new", (doc) => console.log("NEW", doc));
 socket.on("signal:delete", (msg) => console.log("DELETE", msg));
+socket.on("disconnect", (reason) => {
+  if (reason === "io server disconnect") {
+    // JWT expired. POST /api/auth/login, then connect again with the new token.
+  }
+});
 ```
 
 ## Deployment
